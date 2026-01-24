@@ -4,9 +4,13 @@ import org.example.Model.Currency;
 import org.example.Model.ExchangeRate;
 import org.example.Repository.CurrencyRepo;
 import org.example.Repository.ExchangeRateRepo;
+import org.example.Service.CurrencyService;
+import org.example.dto.RatesDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
@@ -17,10 +21,12 @@ public class CurrencyExchangeControllerV2 {
 
     private final CurrencyRepo currencyRepo;
     private final ExchangeRateRepo exchangeRateRepo;
+    private final CurrencyService currencyService;
 
-    public CurrencyExchangeControllerV2(CurrencyRepo currencyRepo, ExchangeRateRepo exchangeRateRepo){
+    public CurrencyExchangeControllerV2(CurrencyRepo currencyRepo, ExchangeRateRepo exchangeRateRepo, CurrencyService currencyService){
         this.currencyRepo = currencyRepo;
         this.exchangeRateRepo=exchangeRateRepo;
+        this.currencyService=currencyService;
     }
 
     //This returns a list of all the symbols - doesnt handle exception but we could use the globalExceptionHandler
@@ -40,7 +46,25 @@ public class CurrencyExchangeControllerV2 {
                     .orElse(ResponseEntity.notFound().build());
      }
 
-     //preload currency and rates
+     @PostMapping("/preloadCurrency")
+    public ResponseEntity<Void> preloadCurrency(@RequestBody List<String> symbols){
+         if (symbols == null || symbols.isEmpty()){
+             return ResponseEntity.badRequest().build();
+         }
+
+        boolean isSaved = currencyService.saveCurrenciesV2(symbols);
+
+         if (isSaved){
+             return ResponseEntity.ok().build();
+         }
+
+         return ResponseEntity.noContent().build();
+     }
+
+
+
+    // preload rates
+    //preload currency and return number of saved
      //AddCurrency
     //Add currency exchange rate
     //retun 404 if missing
